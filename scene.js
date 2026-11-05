@@ -54,7 +54,7 @@ function sphere(parent,x,y,z,r,color){const m=new T.Mesh(new T.SphereGeometry(r,
 function rod(parent,a,b,r,color){const v1=new T.Vector3(...a),v2=new T.Vector3(...b),delta=v2.clone().sub(v1);const m=cyl(parent,...v1.clone().add(v2).multiplyScalar(.5).toArray(),r,delta.length(),color);m.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),delta.normalize());return m;}
 function wire(parent, points, color, radius=.022){const curve = new T.CatmullRomCurve3(points.map(p=>new T.Vector3(...p))); const mesh=new T.Mesh(new T.TubeGeometry(curve,48,radius,6,false),mat(color));parent.add(mesh);return mesh;}
 function group(x=0,y=0,z=0){const g=new T.Group();g.position.set(x,y,z);return g;}
-function piece(g, delay, lift=4, turn=0){world.add(g);parts.push({g,delay,position:g.position.clone(),lift,turn});return g;}
+function piece(g, delay, lift=4, turn=0){world.add(g);parts.push({g,delay,position:g.position.clone(),rotation:g.rotation.clone(),lift,turn});return g;}
 function plane(parent,x,y,z,w,h,material,rotX=0,rotY=0){const m=new T.Mesh(new T.PlaneGeometry(w,h),material);m.position.set(x,y,z);m.rotation.set(rotX,rotY,0);parent.add(m);return m;}
 function textTexture(lines, {width=1024,height=256,bg='transparent',color='#fff6d5',font=90,spacing=1.1}={}){
   const c=document.createElement('canvas'); c.width=width;c.height=height;const ctx=c.getContext('2d');
@@ -87,7 +87,7 @@ box(paving,-1.07,.29,-1.95,11.75,.05,10.08,'#879394');
 // Front sidewalk joints and curb stones are individually modeled.
 for(let x=-6.7;x<4.9;x+=.59){box(paving,x,.31,2.99,.55,.14,.2,'#a5b0ad');}
 for(let z=-6.7;z<3;z+=.59){box(paving,4.85,.31,z,.2,.14,.55,'#a5b0ad');}
-for(let x=-6.6;x<4.8;x+=.58)for(let z=1.18;z<3;z+=.57){box(paving,x,.324,z,.55,.012,.54,rand()>.65?'#89999a':'#9ba4a0');}
+for(let x=-6.6;x<4.8;x+=.58)for(let z=1.18;z<2.7;z+=.57){box(paving,x,.324,z,.55,.012,.54,rand()>.65?'#89999a':'#9ba4a0');}
 for(let z=-6.7;z<1;z+=.58)for(let x=3.7;x<4.8;x+=.55)box(paving,x,.324,z,.52,.014,.55,'#929e9b');
 // Tactile paving travels across the storefront and turns at the intersection.
 for(let x=-6.6;x<4.5;x+=.36){box(paving,x,.343,2.21,.34,.025,.36,'#c1ad64');for(let j=0;j<3;j++)box(paving,x-.1+j*.1,.363,2.21,.025,.015,.29,'#ddc77e');}
@@ -114,7 +114,8 @@ box(structure,-3.63,1.97,0,.15,2.95,4.6,C.wall,true);
 // Interior tiled floor.
 for(let x=-3.3;x<3.5;x+=.57)for(let z=-2;z<2.2;z+=.57)box(structure,x,.585,z,.55,.015,.55,rand()>.8?'#c1bea8':'#ddd4b7');
 for(const x of [-3.6,-1.2,1.0,3.6])box(structure,x,1.95,2.3,.12,2.8,.13,'#b4c5bb',true);
-box(structure,0,.88,2.3,7.3,.62,.15,'#a9ad99',true);
+// Keep the entrance opening clear all the way to the floor.
+for(const [x,w] of [[-2.4,2.28],[2.3,2.45]])box(structure,x,.88,2.3,w,.62,.15,'#a9ad99',true);
 box(structure,0,3.2,2.3,7.4,.16,.2,'#d6d3b7');
 box(structure,3.62,.88,0,.15,.62,4.6,'#a9ad99',true);
 for(const z of [-2.2,0,2.2])box(structure,3.62,1.96,z,.12,2.8,.12,'#b1c3b9',true);
@@ -158,7 +159,7 @@ function shelf(parent,x,z,w,d,levels=4,ry=0){
     const y=.69+l*.36;box(s,0,y,0,w,.055,d,'#d9d4b9');box(s,0,y-.02,d/2,.98*w,.09,.027,C.coral);
     for(let j=0;j<Math.floor(w/.16);j++){
       const h=.13+rand()*.1,c=packColors[(j+l*2)%packColors.length];
-      for(let row=0;row<2;row++)pack(s,-w/2+.1+j*.16,y+h/2+.035,-.08+row*.19,.105,h,.12,c);
+      for(const pz of [-.10,.11])pack(s,-w/2+.1+j*.16,y+h/2+.035,pz,.105,h,.12,c);
     }
     for(let j=0;j<5;j++)box(s,-w*.4+j*w*.2,y-.025,d/2+.018,.085,.035,.008,'#fff3ce');
   }
@@ -181,17 +182,24 @@ for(let i=0;i<5;i++){
 }
 shelf(interior,-1.65,-.25,1.85,.57,4);
 shelf(interior,.75,-.22,1.85,.57,4);
-shelf(interior,2.48,.47,1.9,.50,4,Math.PI/2);
+shelf(interior,2.48,-.05,1.9,.50,4,Math.PI/2);
 // Low front display does not obstruct the view into the store.
-const frontShelf=shelf(interior,1.9,1.53,1.55,.4,2);frontShelf.scale.y=.88;
+const frontShelf=shelf(interior,1.9,1.53,1.55,.4,2);frontShelf.scale.y=.88;frontShelf.position.y=.08;
 box(interior,-2.5,1.04,1.05,1.72,.91,.75,'#d6c7a5',true);
 box(interior,-2.5,1.53,1.05,1.83,.1,.86,'#738c86',true);
 box(interior,-2.64,1.68,.99,.1,.28,.08,'#293e42');
-const screen=box(interior,-2.64,1.87,.99,.43,.29,.07,'#253c43',true);screen.rotation.x=-.18;
-box(interior,-2.64,1.88,1.038,.35,.2,.012,mat('#a1d7ba',.5));
-box(interior,-1.97,1.82,1.13,.47,.49,.43,'#c59e62',true);
-box(interior,-1.97,1.84,1.36,.38,.33,.01,glass);
-for(let j=0;j<3;j++)for(let k=0;k<2;k++)sphere(interior,-2.1+j*.13,1.73+k*.18,1.2,.062,'#e5bd6c');
+// Housing and display share a pivot, so tilting cannot cut the screen into its case.
+const register=group(-2.64,1.87,.99);register.rotation.x=-.18;interior.add(register);
+box(register,0,0,0,.43,.29,.07,'#253c43',true);
+box(register,0,0,.043,.35,.2,.01,mat('#a1d7ba',.5));
+// A hollow warmer: frame, back, shelves and transparent front, not a solid block.
+const warmer=group(-1.97,1.82,1.13);interior.add(warmer);
+box(warmer,0,0,-.2,.47,.49,.03,'#c59e62',true);
+for(const x of [-.22,.22])box(warmer,x,0,0,.03,.49,.43,'#c59e62',true);
+for(const y of [-.23,.23])box(warmer,0,y,0,.47,.03,.43,'#c59e62',true);
+box(warmer,0,0,0,.41,.015,.37,'#c3b78c');
+box(warmer,0,0,.222,.4,.42,.01,glass);
+for(let j=0;j<3;j++)for(const y of [-.16,.063])sphere(warmer,-.13+j*.13,y,.07,.055,'#e5bd6c');
 box(interior,-3.12,1.87,.95,.34,.6,.35,'#2f4545',true);cyl(interior,-3.12,2.24,.95,.1,.15,'#776c55');
 box(interior,-2.5,.9,1.444,1.4,.13,.01,C.green);
 label(interior,-2.5,1.18,1.44,1.0,.2,'いらっしゃいませ',{font:60,color:'#47685d'});
@@ -285,6 +293,7 @@ for(let j=0;j<4;j++){
 }
 // Vertical lightbox attached to the east corner.
 box(outside,3.19,2.8,1.05,.47,1.17,.18,'#416d66',true);
+box(outside,2.94,3.13,1.05,.12,.08,.15,'#416d66');
 box(outside,3.19,2.8,1.155,.38,1.08,.035,mat('#d9f1c9',1.0));
 label(outside,3.19,2.82,1.18,.32,.94,['雨','宿','り'],{font:115,spacing:.8,width:256,height:768,color:'#38675d'});
 piece(outside,3.05,3.5,.1);
@@ -307,11 +316,11 @@ for(let j=0;j<4;j++){
  for(let l=0;l<3;l++)box(alley,2.98,1.73+(j%2)*.43+l*.055,-2.8+Math.floor(j/2)*.55,.01,.012,.28,'#7d8c80');
 }
 // Downpipes from the eaves.
-for(const x of [-4.47,2.69]){rod(alley,[x,.4,-3.94],[x,3.6,-3.94],.045,'#6c8b80');for(let y=.7;y<3.5;y+=.8)box(alley,x,y,-3.94,.13,.06,.13,'#839d8b');}
+for(const x of [-4.56,2.69]){rod(alley,[x,.4,-4.04],[x,3.6,-4.04],.045,'#6c8b80');for(let y=.7;y<3.5;y+=.8)box(alley,x,y,-4.0,.13,.06,.16,'#839d8b');}
 piece(alley,2.0,2.5);
 
 // Bicycle, modeled from tubing, fine spokes, fenders, pedals, basket and kickstand.
-const bike=group(-5.26,.36,-2.05);bike.rotation.y=-.18;
+const bike=group(-5.35,.36,-1.65);bike.rotation.y=Math.PI/2;
 for(const x of [-.63,.65]){
  const tire=new T.Mesh(new T.TorusGeometry(.43,.045,8,40),mat('#1c3038'));tire.position.set(x,.46,0);bike.add(tire);
  const rim=new T.Mesh(new T.TorusGeometry(.365,.016,6,40),mat('#a2b7ac'));rim.position.set(x,.46,0);bike.add(rim);
@@ -328,7 +337,7 @@ piece(bike,3.4,3,.2);
 
 // Street lights, utility pole, signal, curved safety railing, and fine overhead cables.
 const street=group();
-const lamp=group(4.34,.34,2.17);street.add(lamp);
+const lamp=group(4.3,.34,1.5);street.add(lamp);
 cyl(lamp,0,.09,0,.16,.18,'#33535c');cyl(lamp,0,2.32,0,.061,4.55,'#48666a',.048);
 wire(lamp,[[0,4.5,0],[0,4.78,0],[-.15,4.94,0],[-.47,4.94,0],[-.66,4.8,0]],'#708d86',.05);
 const shade=new T.Mesh(new T.ConeGeometry(.28,.13,16,1,true),mat('#354f56'));shade.position.set(-.66,4.77,0);lamp.add(shade);
@@ -348,7 +357,7 @@ wire(street,[[-5.95,5.3,-4.47],[-6.44,4.6,-.8],[-6.7,4.7,2.3]],'#223d45',.015);
 cyl(street,2.4,2.98,-6.45,.055,5.9,'#526e71');
 box(street,2.4,5.8,-6.45,1.1,.08,.12,'#547476');
 // Guardrails on both streets.
-for(const [x,z,len,ry] of [[-1.3,2.9,1.7,0],[1.15,2.9,1.5,0],[4.65,-.8,1.7,Math.PI/2],[4.65,-3.25,1.7,Math.PI/2]]){
+for(const [x,z,len,ry] of [[-3.6,2.9,1.5,0],[1.15,2.9,1.5,0],[4.65,-.8,1.7,Math.PI/2],[4.65,-3.25,1.7,Math.PI/2]]){
  const g=group(x,.35,z);g.rotation.y=ry;street.add(g);
  for(const px of [-len/2,len/2]){cyl(g,px,.42,0,.04,.84,'#b1beb0');cyl(g,px,.04,0,.09,.08,'#627b7d');}
  rod(g,[-len/2,.8,0],[len/2,.8,0],.037,'#b6c6b4');rod(g,[-len/2,.36,0],[len/2,.36,0],.025,'#829e96');
@@ -367,7 +376,7 @@ piece(street,3.8,5,.08);
 
 // Living details, with no inhabitants.
 const details=group();
-for(const [x,z] of [[-4.68,.95],[3.65,-2.58],[-6.3,-5.4]]){
+for(const [x,z] of [[-4.65,1.15],[3.65,-2.58],[-6.3,-5.4]]){
  cyl(details,x,.55,z,.18,.4,'#9d8b69',.23,8);
  for(let j=0;j<8;j++){const a=j*2.4;const l=sphere(details,x+Math.cos(a)*.15,.83+rand()*.2,z+Math.sin(a)*.15,.16,j%2?'#5b8f78':'#80a382');l.scale.set(.5,1.3,.75);l.rotation.z=Math.cos(a)*.5;}
 }
@@ -377,20 +386,21 @@ const board=box(af,0,.52,0,.53,.77,.055,'#587e70',true);board.rotation.x=-.12;
 label(af,0,.62,.065,.43,.46,['ほっと','ひといき'],{font:95,color:'#f6dfae',width:256,height:384,spacing:.85});
 for(const x of [-.26,.26]){rod(af,[x,0,-.24],[x,.95,0],.021,'#b4a486');rod(af,[x,0,.24],[x,.95,0],.021,'#b4a486');}
 // Orange alley cone and discarded delivery boxes.
-box(details,3.83,.35,-5.2,.45,.06,.45,'#b68165');cyl(details,3.83,.69,-5.2,.16,.63,'#d5936c',.035,12);cyl(details,3.83,.72,-5.2,.11,.09,'#d4d2b1',.095,12);
+box(details,3.83,.364,-5.2,.45,.06,.45,'#b68165');cyl(details,3.83,.709,-5.2,.16,.63,'#d5936c',.035,12);cyl(details,3.83,.739,-5.2,.11,.09,'#d4d2b1',.095,12);
 piece(details,4.2,2.5,.1);
 
 // Wet asphalt: irregular puddle silhouettes, broken elongated neon reflections.
 const wet=group();
 const puddleMat=new T.MeshPhysicalMaterial({color:'#648e9b',metalness:.65,roughness:.17,transparent:true,opacity:.23,depthWrite:false});
 for(let j=0;j<33;j++){
- const x=-6.6+rand()*13.2,z=3.4+rand()*3.2;const shape=new T.Shape();
+ let x=-6.6+rand()*13.2;const z=3.4+rand()*3.2,shape=new T.Shape();
  const rx=.18+rand()*.8,rz=.07+rand()*.2;
+ x=T.MathUtils.clamp(x,-6.93+rx*1.1,6.93-rx*1.1);
  for(let k=0;k<=12;k++){const a=k/12*Math.PI*2,r=.8+rand()*.3;const px=Math.cos(a)*rx*r,pz=Math.sin(a)*rz*r;k?shape.lineTo(px,pz):shape.moveTo(px,pz);}
  const p=new T.Mesh(new T.ShapeGeometry(shape),puddleMat);p.rotation.x=-Math.PI/2;p.position.set(x,.047,z);wet.add(p);
 }
 for(let j=0;j<13;j++){
- const p=new T.Mesh(new T.CircleGeometry(.25+rand()*.3,16),puddleMat);p.rotation.x=-Math.PI/2;p.scale.set(1,.3+rand()*.5,1);p.position.set(5.4+rand()*1.1,.05,-6+rand()*8);wet.add(p);
+ const radius=.25+rand()*.3,p=new T.Mesh(new T.CircleGeometry(radius,16),puddleMat);p.rotation.x=-Math.PI/2;p.scale.set(1,.3+rand()*.5,1);p.position.set(Math.min(5.4+rand()*1.1,6.93-radius),.05,-6+rand()*8);wet.add(p);
 }
 // Reflections are painted light fields, not duplicate solid buildings under the road.
 function reflection(x,z,width,length,color){
@@ -407,15 +417,30 @@ glow(wet,-1,.335,1.85,8,2.1,'rgba(255,208,127,1)',.4);
 glow(wet,3.65,.336,-.8,2.5,4.4,'rgba(255,222,160,1)',.18);
 piece(wet,4.6,.05);
 
+// Shared support surfaces prevent rain and ripples passing through roofs or floating.
+function groundHeight(x,z){return x<4.95&&z<3.2?.334:.01;}
+function weatherHeight(x,z){
+ let y=groundHeight(x,z);
+ const surface=(x0,x1,z0,z1,top)=>{if(x>=x0&&x<=x1&&z>=z0&&z<=z1)y=Math.max(y,top);};
+ surface(-4.85,3.05,-4.17,1.07,3.98);
+ surface(-4.75,2.95,.9,1.79,3.22);
+ surface(-3.84,-2.46,-2.75,-1.86,4.53);
+ surface(.65,1.35,-3.4,-2.7,4.33);
+ surface(-5.92,-4.78,-.24,.58,2.6);
+ surface(2.12,3.58,1.14,1.63,1.31);
+ surface(-3.22,-2.62,1.14,1.57,1.6);
+ surface(.35,.95,1.34,1.88,1.34);
+ return y;
+}
 // Fine rain contained above the square plinth; a seeded field avoids visible clumps.
 const rainCount=1150, rainPos=new Float32Array(rainCount*6), rainData=[];
-for(let i=0;i<rainCount;i++)rainData.push({x:(rand()-.5)*13.8,y:rand()*9,z:(rand()-.5)*13.8,s:.12+rand()*.15,v:5+rand()*4});
+for(let i=0;i<rainCount;i++){const x=(rand()-.5)*13.8,z=(rand()-.5)*13.8,floor=weatherHeight(x,z)+.025;rainData.push({x,z,floor,y:floor+rand()*(8.7-floor),s:.12+rand()*.15,v:5+rand()*4});}
 const rainGeo=new T.BufferGeometry();rainGeo.setAttribute('position',new T.BufferAttribute(rainPos,3));
 const rainMat=new T.LineBasicMaterial({color:0x9ebecb,transparent:true,opacity:0,depthWrite:false});
 const rain=new T.LineSegments(rainGeo,rainMat);scene.add(rain);
 const ripCount=80;const rippleMat=new T.MeshBasicMaterial({color:'#a7c8cc',transparent:true,opacity:0,side:T.DoubleSide,depthWrite:false});
 const ripples=new T.InstancedMesh(new T.RingGeometry(.93,1,24),rippleMat,ripCount);ripples.rotation.x=-Math.PI/2;scene.add(ripples);
-const ripData=Array.from({length:ripCount},()=>{let x=(rand()-.5)*13.6,z=(rand()-.5)*13.6;const sidewalk=z<3&&x<4.9; if(sidewalk && x>-4.6&&x<2.9&&z>-4&&z<1.1)z=3.5+rand()*3;return{x,z,y:sidewalk?.37:.086,phase:rand(),speed:.5+rand()*.5};});
+const ripData=Array.from({length:ripCount},()=>{let x,z;do{x=(rand()-.5)*13.4;z=(rand()-.5)*13.4;}while(weatherHeight(x,z)>groundHeight(x,z)+.01);return{x,z,y:groundHeight(x,z)+.025,phase:rand(),speed:.5+rand()*.5};});
 const dummy=new T.Object3D();
 // Dots sparkling along canopy runoff, without particles leaking beyond the base.
 const dropsGeo=new T.BufferGeometry(),dropArr=new Float32Array(50*3);dropsGeo.setAttribute('position',new T.BufferAttribute(dropArr,3));
@@ -447,11 +472,10 @@ controls.maxDistance=48*fitFactor;
 let prev=0;
 function animate(now){
  const t=(now-start)/1000,dt=Math.min(t-prev,.04);prev=t;
- for(const a of parts){const p=reduced?1:T.MathUtils.clamp((t-a.delay)/1.7,0,1);const eased=1-Math.pow(1-p,3);a.g.visible=p>0;a.g.position.copy(a.position);a.g.position.y+=(1-eased)*a.lift;a.g.scale.setScalar(.8+.2*eased);a.g.rotation.y=(1-eased)*a.turn+(a.g===bike?-.18:0);}
+ for(const a of parts){const p=reduced?1:T.MathUtils.clamp((t-a.delay)/1.7,0,1);const eased=1-Math.pow(1-p,3);a.g.visible=p>0;a.g.position.copy(a.position);a.g.position.y+=(1-eased)*a.lift;a.g.scale.setScalar(.8+.2*eased);a.g.rotation.copy(a.rotation);a.g.rotation.y+=(1-eased)*a.turn;}
  const fade=T.MathUtils.smoothstep(t,4.3,7.0);rainMat.opacity=.19*fade;rippleMat.opacity=.19*fade;
  for(let i=0;i<rainCount;i++){
-  const a=rainData[i];a.y-=dt*a.v;if(a.y<.3)a.y=8.7;
-  const onRoof=a.x>-4.75&&a.x<3.05&&a.z>-4.15&&a.z<1.55;if(onRoof&&a.y<4.1)a.y=8.7;
+  const a=rainData[i];a.y-=dt*a.v;if(a.y<a.floor)a.y=8.7;
   const k=i*6;rainPos[k]=a.x;rainPos[k+1]=a.y;rainPos[k+2]=a.z;rainPos[k+3]=a.x-.025;rainPos[k+4]=a.y+a.s;rainPos[k+5]=a.z-.015;
  }
  rainGeo.attributes.position.needsUpdate=true;
@@ -463,4 +487,4 @@ function animate(now){
 }
 requestAnimationFrame(animate);
 // Read-only diagnostics used when verifying the miniature, with no visible controls.
-window.__miniature={scene,camera,controls,renderer,parts,ready:()=>performance.now()-start>7000};
+window.__miniature={version:'1.1.0',scene,camera,controls,renderer,parts,ready:()=>performance.now()-start>7000};
